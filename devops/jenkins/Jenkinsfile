@@ -34,9 +34,10 @@ pipeline {
                         dir(service) {
                             echo "Building ${service}..."
                             if (isUnix()) {
-                                sh "mvn clean package -DskipTests"
+                                sh "chmod +x mvnw"
+                                sh "./mvnw clean package -DskipTests"
                             } else {
-                                bat "mvn clean package -DskipTests"
+                                bat "mvnw.cmd clean package -DskipTests"
                             }
                         }
                     }
@@ -63,9 +64,10 @@ pipeline {
                         dir(service) {
                             echo "Analyzing ${service} with SonarQube..."
                             if (isUnix()) {
-                                sh "mvn sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
+                                sh "chmod +x mvnw"
+                                sh "./mvnw sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
                             } else {
-                                bat "mvn sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
+                                bat "mvnw.cmd sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
                             }
                         }
                     }
