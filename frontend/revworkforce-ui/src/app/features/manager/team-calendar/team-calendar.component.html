@@ -1,0 +1,74 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Team Leave Calendar</div>
+        <div class="page-breadcrumb">Home / Manager / Team Calendar</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">Team Members' Leave Schedule</div>
+        </div>
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Days</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (event of events(); track event.id) {
+                @if (event.status !== 'HOLIDAY') {
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:700;">
+                          {{ getInitials(event.employeeName) }}
+                        </div>
+                        <span>{{ event.employeeName }}</span>
+                      </div>
+                    </td>
+                    <td>{{ event.leaveType }}</td>
+                    <td>{{ event.startDate | date:'dd MMM yyyy' }}</td>
+                    <td>{{ event.endDate | date:'dd MMM yyyy' }}</td>
+                    <td>{{ event.days }}</td>
+                    <td>
+                      <span class="badge-status"
+                        [class.badge-approved]="event.status === 'APPROVED'"
+                        [class.badge-pending]="event.status === 'PENDING'"
+                        [class.badge-rejected]="event.status === 'REJECTED'">
+                        {{ event.status }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              }
+              @empty {
+                <tr>
+                  <td colspan="6" class="text-center text-muted p-4">No leave records found.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+</div>

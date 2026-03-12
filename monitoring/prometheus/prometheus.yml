@@ -1,0 +1,43 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eureka-server:8761']
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']
+
+  - job_name: 'user-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['user-service:8081']
+
+  - job_name: 'leave-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['leave-service:8082']
+
+  - job_name: 'performance-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['performance-service:8083']
+
+  - job_name: 'employee-management-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['employee-management-service:8084']
+
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['notification-service:8085']
+
+  - job_name: 'reporting-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['reporting-service:8086']

@@ -1,0 +1,221 @@
+<div class="d-flex">
+  <app-sidebar role="ADMIN" />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Admin Dashboard</div>
+        <div class="page-breadcrumb">Home / Admin / Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <a routerLink="/admin/employees" class="btn-primary-sm">Manage Employees</a>
+        <div class="topbar-avatar">
+          {{ getInitials(auth.currentUser()?.name) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Banner -->
+      <div class="greeting-banner admin-banner">
+        <div class="greeting-text">
+          <h2>{{ getGreeting() }}, Admin</h2>
+          <p>Monitor your workforce, configure system settings, and generate comprehensive reports.</p>
+        </div>
+        <div class="banner-stats">
+          <div class="bstat"><div class="bstat-num">{{ stats().total }}</div><div class="bstat-label">Total Employees</div></div>
+          <div class="bstat"><div class="bstat-num">{{ stats().departments }}</div><div class="bstat-label">Departments</div></div>
+          <div class="bstat"><div class="bstat-num">{{ stats().active > 0 ? ((stats().active / stats().total) * 100).toFixed(0) : 0 }}%</div><div class="bstat-label">Active Rate</div></div>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="row g-3" style="margin-bottom:1.5rem;">
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().total }}</div>
+            <div class="stat-label">Total Employees</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().active }}</div>
+            <div class="stat-label">Active</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().inactive }}</div>
+            <div class="stat-label">Inactive</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().onLeave }}</div>
+            <div class="stat-label">On Leave</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().departments }}</div>
+            <div class="stat-label">Departments</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats().openReviews }}</div>
+            <div class="stat-label">Reviews</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Employee Table + Quick Actions -->
+      <div class="row g-3" style="margin-bottom:1.5rem;">
+
+        <!-- Employee Table -->
+        <div class="col-12 col-lg-8">
+          <div class="section-header">
+            <div class="section-title">Recent Employees</div>
+            <div class="d-flex gap-2" style="flex-wrap:wrap;">
+              <a routerLink="/admin/employees" class="btn-view-all">View All</a>
+              <a routerLink="/admin/employees" class="btn-primary-sm">Add New</a>
+            </div>
+          </div>
+          <div class="card-panel">
+            <div class="card-panel-header" style="flex-wrap:wrap;gap:0.75rem;">
+              <div class="card-panel-title">Employee List</div>
+              <div class="d-flex gap-2" style="flex-wrap:wrap;flex:1;justify-content:flex-end;">
+                <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search..." style="border:1px solid var(--border);border-radius:8px;padding:0.35rem 0.75rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;outline:none;color:var(--text-main);min-width:150px;" />
+                <select [(ngModel)]="selectedDept" (change)="onSearch()" style="border:1px solid var(--border);border-radius:8px;padding:0.35rem 0.6rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;outline:none;color:var(--text-muted);min-width:120px;">
+                  <option value="">All Depts</option>
+                  @for (dept of departments(); track dept.name) {
+                    <option [value]="dept.name">{{ dept.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            @if (isLoading()) {
+              <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+            } @else if (filteredEmployees().length > 0) {
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead><tr><th style="min-width:180px;">Employee</th><th style="min-width:80px;">ID</th><th style="min-width:100px;">Department</th><th style="min-width:100px;">Manager</th><th style="min-width:80px;">Status</th><th style="min-width:120px;">Actions</th></tr></thead>
+                  <tbody>
+                    @for (emp of filteredEmployees(); track emp.id; let i = $index) {
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:700;flex-shrink:0;"
+                              [style.background]="getAvatarColor(i)">{{ getInitials(emp.name) }}</div>
+                            <div style="min-width:0;">
+                              <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ emp.name }}</div>
+                              <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ emp.role === 'ADMIN' ? 'Admin' : emp.designation }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{{ emp.employeeId }}</td>
+                        <td>{{ emp.department }}</td>
+                        <td>{{ emp.managerName || '—' }}</td>
+                        <td>
+                          <span class="badge-status" [class.badge-active]="emp.active" [class.badge-inactive]="!emp.active">
+                            {{ emp.active ? 'Active' : 'Inactive' }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="d-flex gap-1" style="flex-wrap:wrap;">
+                            <button class="btn-sm-action btn-edit" (click)="navigateToEdit()">Edit</button>
+                            @if (emp.active) {
+                              <button class="btn-sm-action btn-deact" (click)="deactivate(emp.id)">Deactivate</button>
+                            } @else {
+                              <button class="btn-sm-action btn-react" (click)="reactivate(emp.id)">Activate</button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <div class="text-center p-4 text-muted">No employees found.</div>
+            }
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-12 col-lg-4">
+          <div class="section-header">
+            <div class="section-title">Quick Actions</div>
+          </div>
+          <div class="card-panel">
+            <div style="padding:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+              <a routerLink="/admin/employees" class="btn-primary-sm" style="width:100%;text-align:center;justify-content:center;">
+                <i class="bi bi-person-plus"></i> Add Employee
+              </a>
+              <a routerLink="/admin/departments" class="btn-primary-sm" style="width:100%;text-align:center;justify-content:center;">
+                <i class="bi bi-building"></i> Add Department
+              </a>
+              <a routerLink="/admin/announcements" class="btn-primary-sm" style="width:100%;text-align:center;justify-content:center;">
+                <i class="bi bi-megaphone"></i> Create Announcement
+              </a>
+              <a routerLink="/admin/holidays" class="btn-primary-sm" style="width:100%;text-align:center;justify-content:center;">
+                <i class="bi bi-calendar-plus"></i> Add Holiday
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Departments + System Configuration -->
+      <div class="row g-3">
+
+        <!-- Departments -->
+        <div class="col-12 col-lg-6">
+          <div class="section-header">
+            <div class="section-title">Departments</div>
+            <a routerLink="/admin/departments" class="btn-primary-sm">Add</a>
+          </div>
+          <div class="d-flex flex-column gap-2">
+            @for (dept of departments(); track dept.name) {
+              <div class="dept-card">
+                <div style="flex:1;min-width:0;">
+                  <div class="dept-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ dept.name }}</div>
+                  <div class="dept-count-text">{{ dept.count }} employees</div>
+                </div>
+                <div class="dept-actions">
+                  <a routerLink="/admin/departments" class="btn-sm-action btn-edit">Edit</a>
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="text-center p-3 text-muted">No departments found.</div>
+            }
+          </div>
+        </div>
+
+        <!-- System Configuration -->
+        <div class="col-12 col-lg-6">
+          <div class="section-header"><div class="section-title">System Configuration</div></div>
+          <div class="d-flex flex-column gap-2">
+            @for (cfg of configs; track cfg.name) {
+              <div class="config-card">
+                <div class="d-flex align-items-center" style="flex:1;min-width:0;">
+                  <div class="config-icon" [style.background]="cfg.color" [style.color]="cfg.iconColor || '#fff'">
+                    <i [class]="cfg.icon"></i>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="config-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ cfg.name }}</div>
+                    <div class="config-desc" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ cfg.desc }}</div>
+                  </div>
+                </div>
+                <a [routerLink]="cfg.route" class="btn-config">{{ cfg.btn }}</a>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

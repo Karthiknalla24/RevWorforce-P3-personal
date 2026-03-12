@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leave-service
+  namespace: revworkforce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leave-service
+  template:
+    metadata:
+      labels:
+        app: leave-service
+    spec:
+      containers:
+      - name: leave-service
+        image: revworkforce/leave-service:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MYSQL_PASSWORD
+        - name: SPRING_DATASOURCE_URL
+          value: "$(MYSQL_URL)leave_db"
+        envFrom:
+        - configMapRef:
+            name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leave-service
+  namespace: revworkforce
+spec:
+  selector:
+    app: leave-service
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082

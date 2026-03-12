@@ -1,0 +1,116 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">My Goals</div>
+        <div class="page-breadcrumb">Home / Performance / My Goals</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button><div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="section-header">
+        <div class="section-title">My Goals</div>
+        <button class="btn-primary-sm" (click)="showAddForm.set(true)">Add Goal</button>
+      </div>
+
+      @if (showAddForm()) {
+        <div class="card-panel" style="margin-bottom:1rem;">
+          <div class="card-panel-header">
+            <div class="card-panel-title">Add New Goal</div>
+            <button class="btn-sm-action btn-reject" (click)="showAddForm.set(false)"></button>
+          </div>
+          <form (ngSubmit)="addGoal()" style="padding:1rem;">
+            <div class="mb-3">
+              <label style="display:block;font-weight:600;margin-bottom:0.5rem;font-size:0.85rem;">Title</label>
+              <input type="text" [(ngModel)]="newGoal.title" name="title" required
+                style="width:100%;border:1px solid var(--border);border-radius:8px;padding:0.65rem;font-size:0.85rem;outline:none;" />
+            </div>
+            <div class="mb-3">
+              <label style="display:block;font-weight:600;margin-bottom:0.5rem;font-size:0.85rem;">Description</label>
+              <textarea [(ngModel)]="newGoal.description" name="description" rows="3"
+                style="width:100%;border:1px solid var(--border);border-radius:8px;padding:0.65rem;font-size:0.85rem;outline:none;resize:vertical;"></textarea>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label style="display:block;font-weight:600;margin-bottom:0.5rem;font-size:0.85rem;">Deadline</label>
+                <input type="date" [(ngModel)]="newGoal.deadline" name="deadline" required
+                  style="width:100%;border:1px solid var(--border);border-radius:8px;padding:0.65rem;font-size:0.85rem;outline:none;" />
+              </div>
+              <div class="col-md-6">
+                <label style="display:block;font-weight:600;margin-bottom:0.5rem;font-size:0.85rem;">Priority</label>
+                <select [(ngModel)]="newGoal.priority" name="priority"
+                  style="width:100%;border:1px solid var(--border);border-radius:8px;padding:0.65rem;font-size:0.85rem;outline:none;">
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary-sm">Create Goal</button>
+          </form>
+        </div>
+      }
+
+      <div class="card-panel">
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="row g-3" style="padding:1rem;">
+            @for (goal of goals(); track goal.id) {
+              <div class="col-md-6">
+                <div style="border:1px solid var(--border);border-radius:12px;padding:1.25rem;background:var(--bg-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.75rem;">
+                    <div style="flex:1;">
+                      <div style="font-weight:700;font-size:1rem;color:var(--text-main);">{{ goal.title }}</div>
+                      @if (goal.description) {
+                         <div style="font-size:0.8rem;color:var(--text-main);margin-top:0.5rem;line-height:1.4;">{{ goal.description }}</div>
+                      }
+                      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">
+                        Due: {{ goal.deadline | date:'dd MMM yyyy' }}
+                      </div>
+                    </div>
+                    <span class="priority-badge"
+                      [class.priority-high]="(goal.priority || 'MEDIUM') === 'HIGH'"
+                      [class.priority-medium]="(goal.priority || 'MEDIUM') === 'MEDIUM'"
+                      [class.priority-low]="(goal.priority || 'MEDIUM') === 'LOW'">
+                      {{ goal.priority || 'MEDIUM' }}
+                    </span>
+                  </div>
+                  <div style="margin-bottom:0.75rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                      <span style="font-size:0.75rem;color:var(--text-muted);">Progress</span>
+                      <span style="font-size:0.85rem;font-weight:700;color:var(--text-main);">{{ goal.progress }}%</span>
+                    </div>
+                    <div style="height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;">
+                      <div [style.width]="goal.progress + '%'" [style.background]="getProgressColor(goal.progress)"
+                        style="height:100%;transition:width 0.3s;"></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:1.5rem;align-items:center;">
+                    <div style="flex:1; display:flex; align-items:center;">
+                        <input type="range" min="0" max="100" [value]="goal.progress"
+                          (change)="updateProgress(goal.id, $any($event.target).value)"
+                          style="width:100%;cursor:pointer;" />
+                    </div>
+                    <button class="btn-delete-goal" (click)="deleteGoal(goal.id)" title="Delete Goal">
+                       <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="col-12 text-center text-muted p-4">No goals yet. Click "Add Goal" to create one.</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

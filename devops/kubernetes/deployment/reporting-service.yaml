@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporting-service
+  namespace: revworkforce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reporting-service
+  template:
+    metadata:
+      labels:
+        app: reporting-service
+    spec:
+      containers:
+      - name: reporting-service
+        image: revworkforce/reporting-service:latest
+        ports:
+        - containerPort: 8086
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MYSQL_PASSWORD
+        - name: SPRING_DATASOURCE_URL
+          value: "$(MYSQL_URL)reporting_db"
+        envFrom:
+        - configMapRef:
+            name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reporting-service
+  namespace: revworkforce
+spec:
+  selector:
+    app: reporting-service
+  ports:
+    - protocol: TCP
+      port: 8086
+      targetPort: 8086

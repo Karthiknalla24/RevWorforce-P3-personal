@@ -1,0 +1,139 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">My Reviews</div>
+        <div class="page-breadcrumb">Home / Performance / My Reviews</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button><div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="section-header">
+        <div class="section-title">Performance Reviews</div>
+        <button class="btn-primary-sm" (click)="showCreateModal = true">
+          Create New Review
+        </button>
+      </div>
+
+      <div class="card-panel">
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="row g-3" style="padding:1rem;">
+            @for (review of reviews(); track review.id) {
+              <div class="col-md-6">
+                <div style="border:1px solid var(--border);border-radius:12px;padding:1.25rem;background:var(--bg-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem;">
+                    <div>
+                      <div style="font-weight:700;font-size:1rem;color:var(--text-main);">Year {{ review.year }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Self Rating: {{ getStars(review.selfRating) }} ({{ review.selfRating }}/5)</div>
+                    </div>
+                    <span class="badge-status"
+                      [class.badge-approved]="review.status === 'REVIEWED'"
+                      [class.badge-pending]="review.status === 'SUBMITTED'"
+                      [class.badge-inactive]="review.status === 'DRAFT'">
+                      {{ review.status }}
+                    </span>
+                  </div>
+
+                  <!-- Submission Details -->
+                  <div style="font-size:0.85rem;margin-bottom:1rem;color:var(--text-main);">
+                    <div style="margin-bottom:0.5rem; background:rgba(var(--accent-rgb), 0.05); padding: 0.5rem; border-radius: 6px;">
+                        <strong>Deliverables:</strong> {{ review.deliverables }}
+                    </div>
+                    <div style="margin-bottom:0.5rem; background:rgba(var(--accent-rgb), 0.05); padding: 0.5rem; border-radius: 6px;">
+                        <strong>Accomplishments:</strong> {{ review.accomplishments }}
+                    </div>
+                    <div style="margin-bottom:0.5rem; background:rgba(var(--accent-rgb), 0.05); padding: 0.5rem; border-radius: 6px;">
+                        <strong>Improvements:</strong> {{ review.improvements }}
+                    </div>
+                  </div>
+
+                  @if (review.status === 'REVIEWED') {
+                    <div style="margin-bottom:0.75rem;">
+                      <div style="color:#f59e0b;font-size:1.1rem;margin-bottom:0.25rem;">{{ getStars(review.managerRating) }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted);">Manager Rating: {{ review.managerRating }}/5</div>
+                    </div>
+                    <div style="background:var(--bg-secondary);padding:0.75rem;border-radius:8px;font-size:0.85rem;color:var(--text-main); border-left: 4px solid var(--accent);">
+                      <strong>Feedback:</strong> {{ review.managerFeedback }}
+                    </div>
+                  } @else if (review.status === 'SUBMITTED') {
+                    <div style="background:rgba(245,158,11,0.1);color:#d97706;padding:0.75rem;border-radius:8px;font-size:0.85rem;">
+                      Awaiting manager feedback
+                    </div>
+                  } @else {
+                    <div style="background:rgba(156,163,175,0.1);color:#6b7280;padding:0.75rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.75rem;">
+                      Draft - Not yet submitted
+                    </div>
+                    <button class="btn-primary-sm" (click)="submitReview(review.id)" style="width:100%;">
+                      Submit for Review
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="col-12 text-center text-muted p-4">No reviews available yet.</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Review Modal -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="showCreateModal = false">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Create Performance Review</h3>
+          <button type="button" (click)="showCreateModal = false" class="modal-close">&times;</button>
+        </div>
+        <form (ngSubmit)="createReview()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Year</label>
+              <input type="number" [(ngModel)]="newReview.year" name="year" required min="2020" max="2035" class="form-control" placeholder="Enter year (e.g., 2024, 2025, 2027)" />
+              <small style="color:var(--text-muted);font-size:0.75rem;margin-top:0.25rem;display:block;">Note: You can only create one review per year</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Key Deliverables</label>
+              <textarea [(ngModel)]="newReview.deliverables" name="deliverables" required rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Accomplishments</label>
+              <textarea [(ngModel)]="newReview.accomplishments" name="accomplishments" required rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Areas of Improvement</label>
+              <textarea [(ngModel)]="newReview.improvements" name="improvements" required rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Self-Assessment Rating (1-5)</label>
+              <select [(ngModel)]="newReview.selfRating" name="selfRating" required class="form-control">
+                <option value="">Select rating</option>
+                <option [value]="1">1 - Needs Improvement</option>
+                <option [value]="2">2 - Below Expectations</option>
+                <option [value]="3">3 - Meets Expectations</option>
+                <option [value]="4">4 - Exceeds Expectations</option>
+                <option [value]="5">5 - Outstanding</option>
+              </select>
+            </div>
+            <div class="modal-footer">
+              <button type="button" (click)="showCreateModal = false" class="btn-secondary-sm">Cancel</button>
+              <button type="submit" class="btn-primary-sm" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'Creating...' : 'Create Review' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,141 @@
+pipeline {
+    agent any
+
+    environment {
+        // --- DOCKER HUB CONFIGURATION ---
+        DOCKER_HUB_USER = 'karthiknalla24'
+        DOCKER_HUB_CREDS = 'docker-hub-credentials' // This must match the Credential ID in Jenkins
+        IMAGE_VERSION = "v${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Backend Services') {
+            steps {
+                script {
+                    def services = [
+                        'infrastructure/config-server',
+                        'infrastructure/eureka-server',
+                        'infrastructure/api-gateway',
+                        'services/user-service',
+                        'services/notification-service',
+                        'services/employee-management-service',
+                        'services/leave-service',
+                        'services/performance-service',
+                        'services/reporting-service'
+                    ]
+                    
+                    for (service in services) {
+                        dir(service) {
+                            echo "Building ${service}..."
+                            if (isUnix()) {
+                                sh "mvn clean package -DskipTests"
+                            } else {
+                                bat "mvn clean package -DskipTests"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def services = [
+                        'infrastructure/config-server',
+                        'infrastructure/eureka-server',
+                        'infrastructure/api-gateway',
+                        'services/user-service',
+                        'services/notification-service',
+                        'services/employee-management-service',
+                        'services/leave-service',
+                        'services/performance-service',
+                        'services/reporting-service'
+                    ]
+                    
+                    for (service in services) {
+                        dir(service) {
+                            echo "Analyzing ${service} with SonarQube..."
+                            if (isUnix()) {
+                                sh "mvn sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
+                            } else {
+                                bat "mvn sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('frontend/revworkforce-ui') {
+                    echo "Building Angular Frontend..."
+                    script {
+                        if (isUnix()) {
+                            sh "npm install"
+                            sh "npm run build --configuration=production"
+                        } else {
+                            bat "npm install"
+                            bat "npm run build --configuration=production"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    def services = [
+                        [name: 'config-server', path: 'infrastructure/config-server', dockerfile: 'devops/docker/config-server.Dockerfile'],
+                        [name: 'eureka-server', path: 'infrastructure/eureka-server', dockerfile: 'devops/docker/eureka-server.Dockerfile'],
+                        [name: 'api-gateway', path: 'infrastructure/api-gateway', dockerfile: 'devops/docker/api-gateway.Dockerfile'],
+                        [name: 'user-service', path: 'services/user-service', dockerfile: 'devops/docker/user-service.Dockerfile'],
+                        [name: 'notification-service', path: 'services/notification-service', dockerfile: 'devops/docker/notification-service.Dockerfile'],
+                        [name: 'employee-management-service', path: 'services/employee-management-service', dockerfile: 'devops/docker/employee-management-service.Dockerfile'],
+                        [name: 'leave-service', path: 'services/leave-service', dockerfile: 'devops/docker/leave-service.Dockerfile'],
+                        [name: 'performance-service', path: 'services/performance-service', dockerfile: 'devops/docker/performance-service.Dockerfile'],
+                        [name: 'reporting-service', path: 'services/reporting-service', dockerfile: 'devops/docker/reporting-service.Dockerfile'],
+                        [name: 'revworkforce-ui', path: 'frontend/revworkforce-ui', dockerfile: 'devops/docker/frontend.Dockerfile']
+                    ]
+
+                    // Wrap pushing in docker.withRegistry for authentication
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDS) {
+                        for (service in services) {
+                            echo "Building and Pushing Image for: ${service.name}"
+                            def fullImageName = "${DOCKER_HUB_USER}/${service.name}"
+                            
+                            // Build image
+                            def customImage = docker.build("${fullImageName}:${IMAGE_VERSION}", "-f ${service.dockerfile} .")
+                            
+                            // Push specific version
+                            customImage.push()
+                            
+                            // Push 'latest'
+                            customImage.push('latest')
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "CI/CD Pipeline Finished"
+        }
+        success {
+            echo "Build & Push successful! Images are available on Docker Hub."
+        }
+        failure {
+            echo "Pipeline failed. Please check the logs."
+        }
+    }
+}

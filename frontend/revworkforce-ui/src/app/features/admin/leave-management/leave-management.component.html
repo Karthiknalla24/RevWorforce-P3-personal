@@ -1,0 +1,86 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Leave Management</div>
+        <div class="page-breadcrumb">Home / Admin / System Configuration / Leave Management</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials('Admin') }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        <div class="card-panel-header" style="flex-direction:column;align-items:stretch;gap:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="card-panel-title">All Leave Applications ({{ filteredLeaves().length }})</div>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <input type="text" (input)="onSearch($any($event.target).value)" placeholder="Search by employee or leave type..."
+                style="border:1px solid var(--border);border-radius:8px;padding:0.5rem 1rem;width:300px;outline:none;" />
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn-secondary-sm" [class.active]="filterStatus() === 'ALL'" (click)="onFilterStatus('ALL')">All</button>
+            <button class="btn-secondary-sm" [class.active]="filterStatus() === 'PENDING'" (click)="onFilterStatus('PENDING')">Pending</button>
+            <button class="btn-secondary-sm" [class.active]="filterStatus() === 'APPROVED'" (click)="onFilterStatus('APPROVED')">Approved</button>
+            <button class="btn-secondary-sm" [class.active]="filterStatus() === 'REJECTED'" (click)="onFilterStatus('REJECTED')">Rejected</button>
+          </div>
+        </div>
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:20%;">Employee</th>
+                  <th style="width:12%;">Leave Type</th>
+                  <th style="width:11%;">From Date</th>
+                  <th style="width:11%;">To Date</th>
+                  <th style="width:6%;">Days</th>
+                  <th style="width:20%;">Reason</th>
+                  <th style="width:10%;">Status</th>
+                  <th style="width:10%;">Applied On</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (leave of filteredLeaves(); track leave.id) {
+                  <tr>
+                    <td style="white-space:nowrap;vertical-align:middle;">
+                      <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:700;flex-shrink:0;">
+                          {{ getInitials(leave.employeeName) }}
+                        </div>
+                        <span style="font-weight:600;">{{ leave.employeeName }}</span>
+                      </div>
+                    </td>
+                    <td style="white-space:nowrap;vertical-align:middle;">{{ leave.leaveType }}</td>
+                    <td style="white-space:nowrap;vertical-align:middle;">{{ leave.startDate | date:'MMM dd, yyyy' }}</td>
+                    <td style="white-space:nowrap;vertical-align:middle;">{{ leave.endDate | date:'MMM dd, yyyy' }}</td>
+                    <td style="white-space:nowrap;text-align:center;vertical-align:middle;">{{ leave.numberOfDays }}</td>
+                    <td style="vertical-align:middle;"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" [title]="leave.reason">{{ leave.reason }}</span></td>
+                    <td style="white-space:nowrap;vertical-align:middle;">
+                      <span class="badge-status" [class.badge-active]="leave.status === 'APPROVED'" [class.badge-inactive]="leave.status === 'REJECTED'" [style.background]="leave.status === 'PENDING' ? '#fbbf24' : ''" [style.color]="leave.status === 'PENDING' ? '#fff' : ''">
+                        {{ leave.status }}
+                      </span>
+                    </td>
+                    <td style="white-space:nowrap;vertical-align:middle;">{{ leave.appliedDate | date:'MMM dd, yyyy' }}</td>
+                  </tr>
+                }
+                @empty {
+                  <tr><td colspan="8" class="text-center p-4 text-muted">No leave applications found</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

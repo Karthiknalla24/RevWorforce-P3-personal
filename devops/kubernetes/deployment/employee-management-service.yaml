@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-management-service
+  namespace: revworkforce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-management-service
+  template:
+    metadata:
+      labels:
+        app: employee-management-service
+    spec:
+      containers:
+      - name: employee-management-service
+        image: revworkforce/employee-management-service:latest
+        ports:
+        - containerPort: 8084
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MYSQL_PASSWORD
+        - name: SPRING_DATASOURCE_URL
+          value: "$(MYSQL_URL)employee_mgmt_db"
+        envFrom:
+        - configMapRef:
+            name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-management-service
+  namespace: revworkforce
+spec:
+  selector:
+    app: employee-management-service
+  ports:
+    - protocol: TCP
+      port: 8084
+      targetPort: 8084

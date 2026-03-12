@@ -1,0 +1,126 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Team Goals</div>
+        <div class="page-breadcrumb">Home / Manager / Team Goals</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">Team Member Goals</div>
+        </div>
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Goal</th>
+                    <th>Priority</th>
+                    <th>Deadline</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (goal of goals(); track goal.id) {
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:700;">
+                          {{ getInitials(goal.employeeName) }}
+                        </div>
+                        <div style="font-weight:600;font-size:0.85rem;">{{ goal.employeeName }}</div>
+                      </div>
+                    </td>
+                    <td style="font-size:0.85rem;">{{ goal.title || goal.description }}</td>
+                    <td>
+                      <span class="priority-badge"
+                        [class.priority-high]="(goal.priority || 'MEDIUM') === 'HIGH'"
+                        [class.priority-medium]="(goal.priority || 'MEDIUM') === 'MEDIUM'"
+                        [class.priority-low]="(goal.priority || 'MEDIUM') === 'LOW'">
+                        {{ goal.priority || 'MEDIUM' }}
+                      </span>
+                    </td>
+                    <td style="font-size:0.75rem;white-space:nowrap;">
+                      {{ goal.deadline | date:'dd MMM yyyy' }}
+                    </td>
+                    <td>
+                      <div style="width:100px;">
+                        <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;margin-bottom:0.25rem;">
+                          <div [style.width.%]="goal.progress || 0" style="height:100%;background:linear-gradient(to right, #3b82f6, #1d4ed8);border-radius:3px;"></div>
+                        </div>
+                        <span style="font-size:0.7rem;color:var(--text-muted);">{{ goal.progress || 0 }}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge-status" [ngClass]="getStatusClass(goal.status)">
+                        {{ (goal.status || 'NOT_STARTED').replace('_', ' ') }}
+                      </span>
+                    </td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      <span class="text-muted" style="font-size:0.8rem;">{{ goal.managerComment || '-' }}</span>
+                    </td>
+                    <td>
+                      <button class="btn-sm-action btn-primary" (click)="openCommentModal(goal)">
+                        {{ goal.managerComment ? 'Edit' : 'Comment' }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr><td colspan="8" class="text-center p-4 text-muted">No team goals found</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (showCommentModal()) {
+    <div class="modal-overlay" (click)="showCommentModal.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Goal Feedback</h3>
+          <button type="button" (click)="showCommentModal.set(false)" class="modal-close">&times;</button>
+        </div>
+        <form (ngSubmit)="submitComment()">
+          <div class="modal-body">
+            <div style="background:var(--bg-secondary);padding:1rem;border-radius:12px;margin-bottom:1.5rem;">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:700;margin-bottom:0.25rem;">Employee</div>
+                <div style="font-weight:600;margin-bottom:0.75rem;">{{ selectedGoal?.employeeName }}</div>
+                
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:700;margin-bottom:0.25rem;">Goal Title</div>
+                <div style="font-size:0.9rem;">{{ selectedGoal?.title || selectedGoal?.description }}</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Manager Feedback / Comment</label>
+              <textarea [(ngModel)]="comment" name="comment" rows="4" class="form-control" required placeholder="Provide feedback or guidance on this goal..."></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" (click)="showCommentModal.set(false)" class="btn-secondary-sm">Cancel</button>
+              <button type="submit" class="btn-primary-sm">Save Comment</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

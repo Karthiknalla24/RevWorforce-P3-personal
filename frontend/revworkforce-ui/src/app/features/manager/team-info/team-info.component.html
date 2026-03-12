@@ -1,0 +1,167 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">My Team</div>
+        <div class="page-breadcrumb">Home / Manager / Team Info</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">Team Members & Leave Balances</div>
+        </div>
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr><th>Employee</th><th>ID</th><th>Department</th><th>Designation</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              @for (member of teamMembers(); track member.id; let i = $index) {
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:700;"
+                        [style.background]="getAvatarColor(i)">{{ getInitials(member.name) }}</div>
+                      <span>{{ member.name }}</span>
+                    </div>
+                  </td>
+                  <td>{{ member.employeeId }}</td>
+                  <td>{{ member.departmentName }}</td>
+                  <td>{{ member.designationTitle }}</td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <button class="btn-sm-action btn-primary" (click)="viewProfile(member)">
+                        View Profile
+                      </button>
+                      <button class="btn-sm-action btn-view-p" (click)="viewLeaveBalance(member)">
+                        Leave Balance
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @empty {
+                <tr><td colspan="5" class="text-center p-4 text-muted">No team members found</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (selectedMember()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()" style="max-width:600px;">
+        <div class="modal-header">
+          <h3 class="modal-title">Leave Balance - {{ selectedMember().name }}</h3>
+          <button type="button" (click)="closeModal()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          @if (loadingBalance()) {
+            <div class="text-center p-4"><div class="spinner-border text-primary"></div></div>
+          } @else {
+            <table class="data-table">
+              <thead>
+                <tr><th>Leave Type</th><th>Total</th><th>Used</th><th>Remaining</th></tr>
+              </thead>
+              <tbody>
+                @for (balance of memberLeaveBalance(); track balance.id) {
+                  <tr>
+                    <td><strong>{{ balance.leaveTypeName }}</strong></td>
+                    <td>{{ balance.totalQuota }}</td>
+                    <td><span style="color:var(--danger);">{{ balance.used }}</span></td>
+                    <td><span style="color:var(--success);font-weight:600;">{{ balance.remaining }}</span></td>
+                  </tr>
+                }
+                @empty {
+                  <tr><td colspan="4" class="text-center p-3 text-muted">No leave balance data</td></tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeModal()" class="btn-secondary-sm">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showProfileModal()) {
+    <div class="modal-overlay" (click)="closeProfileModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()" style="max-width:700px;">
+        <div class="modal-header">
+          <h3 class="modal-title">Employee Profile</h3>
+          <button type="button" (click)="closeProfileModal()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          @if (loadingProfile()) {
+            <div class="text-center p-4"><div class="spinner-border text-primary"></div></div>
+          } @else if (memberProfile()) {
+            <div class="profile-details">
+              <div class="profile-section">
+                <h4>Personal Information</h4>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <label>Full Name</label>
+                    <span>{{ memberProfile().firstName }} {{ memberProfile().lastName }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Employee ID</label>
+                    <span>{{ memberProfile().employeeId }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Email</label>
+                    <span>{{ memberProfile().email }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Role</label>
+                    <span>{{ memberProfile().role }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="profile-section">
+                <h4>Work Information</h4>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <label>Department</label>
+                    <span>{{ memberProfile().departmentName }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Designation</label>
+                    <span>{{ memberProfile().designationTitle }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Joining Date</label>
+                    <span>{{ memberProfile().joiningDate | date:'dd MMM yyyy' }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Status</label>
+                    <span [class]="memberProfile().active ? 'badge-active' : 'badge-inactive'">
+                      {{ memberProfile().active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" (click)="closeProfileModal()" class="btn-secondary-sm">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

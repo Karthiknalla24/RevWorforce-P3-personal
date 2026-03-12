@@ -1,0 +1,205 @@
+<div class="d-flex">
+  <app-sidebar role="MANAGER" />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Manager Dashboard</div>
+        <div class="page-breadcrumb">Home / Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-avatar">
+          {{ getInitials(auth.currentUser()?.name) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Banner -->
+      <div class="greeting-banner manager-banner">
+        <div class="greeting-text">
+          <h2>{{ getGreeting() }}, {{ auth.currentUser()?.name || 'Manager' }}</h2>
+          <p>You have <strong style="color:var(--accent);">{{ pendingLeaves().length }} pending leave approvals</strong> awaiting your action.</p>
+        </div>
+        <div class="banner-pills">
+          <div class="banner-pill">{{ teamMembers().length }} Reportees</div>
+          <div class="banner-pill">{{ pendingLeaves().length }} Pending</div>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ teamMembers().length }}</div>
+            <div class="stat-label">Direct Reportees</div>
+            <div class="stat-sublabel"><span class="tag tag-success">Active team</span></div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ pendingLeaves().length }}</div>
+            <div class="stat-label">Pending Approvals</div>
+            <div class="stat-sublabel"><span class="tag tag-warning">Action required</span></div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">On Leave Today</div>
+            <div class="stat-sublabel"><span class="tag tag-success">Team status</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Pending Leaves + Team Members -->
+      <div class="row g-3 mb-4">
+
+        <!-- Pending Leave Approvals -->
+        <div class="col-lg-7">
+          <div class="section-header">
+            <div class="section-title">Pending Leave Approvals</div>
+            <a routerLink="/manager/team-leaves" class="btn-view-all">All Leaves</a>
+          </div>
+          <div class="card-panel">
+            @if (isLoading()) {
+              <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <table class="data-table">
+                <thead>
+                  <tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  @for (leave of pendingLeaves(); track leave.id) {
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:700;">
+                            {{ getInitials(leave.employeeName) }}
+                          </div>
+                          <span>{{ leave.employeeName }}</span>
+                        </div>
+                      </td>
+                      <td>{{ leave.leaveType }}</td>
+                      <td>{{ leave.startDate | date:'dd MMM' }} – {{ leave.endDate | date:'dd MMM' }}</td>
+                      <td>{{ leave.days }}</td>
+                      <td>{{ leave.reason }}</td>
+                      <td>
+                        <div class="d-flex gap-1">
+                          <button class="btn-sm-action btn-approve" (click)="openFeedbackModal(leave.id, 'approve')">
+                            Approve
+                          </button>
+                          <button class="btn-sm-action btn-reject" (click)="openFeedbackModal(leave.id, 'reject')">
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @empty {
+                    <tr><td colspan="6" class="text-center text-muted p-4">No pending approvals.</td></tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+
+        <!-- Team Members -->
+        <div class="col-lg-5">
+          <div class="section-header">
+            <div class="section-title">My Team</div>
+            <a routerLink="/manager/team-info" class="btn-view-all">View All</a>
+          </div>
+          <div class="row g-2">
+            @for (member of teamMembers().slice(0,4); track member.id; let i = $index) {
+              <div class="col-6">
+                <div class="team-member-card">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="tm-avatar" [style.background]="getAvatarColor(i)">{{ getInitials(member.name) }}</div>
+                    <div><div class="tm-name">{{ member.name }}</div><div class="tm-role">{{ member.designation }}</div></div>
+                  </div>
+                  <div class="d-flex align-items-center gap-1">
+                    <div class="status-online"></div>
+                    <span style="font-size:0.75rem;color:var(--text-muted);">Active</span>
+                  </div>
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="col-12 text-center p-4 text-muted">No team members found.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Quick Actions -->
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="section-header">
+            <div class="section-title">Quick Actions</div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <a routerLink="/manager/team-leaves" class="quick-action-card">
+                <div class="qa-title">Approve Leaves</div>
+                <div class="qa-desc">Review pending leave requests</div>
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a routerLink="/employee/apply-leave" class="quick-action-card">
+                <div class="qa-title">Apply Leave</div>
+                <div class="qa-desc">Request time off</div>
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a routerLink="/employee/reviews" class="quick-action-card">
+                <div class="qa-title">My Reviews</div>
+                <div class="qa-desc">View performance reviews</div>
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a routerLink="/employee/goals" class="quick-action-card">
+                <div class="qa-title">My Goals</div>
+                <div class="qa-desc">Track your goals</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  @if (showFeedbackModal()) {
+    <div class="modal-overlay" (click)="showFeedbackModal.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ feedbackAction === 'approve' ? 'Approve Leave' : 'Reject Leave' }}</h3>
+          <button class="modal-close" (click)="showFeedbackModal.set(false)">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Manager Comment {{ feedbackAction === 'reject' ? '*' : '' }}</label>
+            <textarea 
+              class="form-control" 
+              rows="3" 
+              [(ngModel)]="feedbackComment" 
+              placeholder="Enter your comments here..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary-sm" (click)="showFeedbackModal.set(false)">Cancel</button>
+          <button 
+            [class]="feedbackAction === 'approve' ? 'btn-primary-sm' : 'btn-danger-sm'" 
+            (click)="submitFeedback()"
+          >
+            {{ feedbackAction === 'approve' ? 'Confirm Approval' : 'Confirm Rejection' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

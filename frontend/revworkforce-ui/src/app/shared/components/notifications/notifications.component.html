@@ -1,0 +1,54 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Notifications</div>
+        <div class="page-breadcrumb">Home / Notifications</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <button class="btn-primary-sm" (click)="markAllAsRead()">Mark All Read</button>
+        <button class="btn-danger-sm" (click)="clearNotifications()" 
+          style="margin-left:8px;background:#ef4444;border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.85rem;">Clear All</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div style="padding:0.5rem;">
+            @for (notif of notifications(); track notif.id) {
+              <div class="notif-item" [class.unread]="!notif.readStatus" (click)="markAsRead(notif.id)"
+                style="cursor:pointer;padding:1rem;border-bottom:1px solid var(--border);transition:background 0.2s;"
+                [style.background]="notif.readStatus ? 'transparent' : 'rgba(59,130,246,0.05)'">
+                <div style="display:flex;gap:1rem;">
+                  <div class="notif-dot" [class.read]="notif.readStatus"
+                    style="width:10px;height:10px;border-radius:50%;margin-top:0.5rem;flex-shrink:0;"
+                    [style.background]="notif.readStatus ? 'var(--border)' : 'var(--accent)'"></div>
+                  <div style="flex:1;">
+                    <div class="notif-text" [innerHTML]="notif.message" style="font-size:0.9rem;color:var(--text-main);margin-bottom:0.25rem;"></div>
+                    <div class="notif-time" style="font-size:0.75rem;color:var(--text-muted);">{{ notif.createdAt | date:'short' }}</div>
+                  </div>
+                  @if (!notif.readStatus) {
+                    <button class="btn-sm-action btn-approve" (click)="markAsRead(notif.id); $event.stopPropagation()"
+                      style="align-self:center;">
+                      </button>
+                  }
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="text-center text-muted p-4">No notifications yet.</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

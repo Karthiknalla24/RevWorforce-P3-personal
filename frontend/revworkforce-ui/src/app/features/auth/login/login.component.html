@@ -1,0 +1,72 @@
+<div class="login-wrapper">
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel" style="width: 100%; max-width: 500px; margin: 0 auto;">
+    <div class="login-card">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #1e40af; margin-bottom: 0.5rem;">
+          Rev<span style="color: #f59e0b;">Workforce</span>
+        </div>
+        <div style="font-size: 0.9rem; color: #6b7280; font-weight: 500;">HR Management Platform</div>
+      </div>
+      
+      <div class="login-header">
+        <h2>Welcome back</h2>
+        <p>Sign in to your RevWorkforce account</p>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab" [class.active]="selectedRole() === 'EMPLOYEE'" (click)="setRole('EMPLOYEE')">
+          Employee
+        </button>
+        <button class="role-tab" [class.active]="selectedRole() === 'MANAGER'" (click)="setRole('MANAGER')">
+          Manager
+        </button>
+        <button class="role-tab" [class.active]="selectedRole() === 'ADMIN'" (click)="setRole('ADMIN')">
+          Admin
+        </button>
+      </div>
+
+      <!-- Error -->
+      @if (errorMsg()) {
+        <div class="alert-error">
+          {{ errorMsg() }}
+        </div>
+      }
+
+      <!-- Form -->
+      <form (ngSubmit)="onSubmit()">
+        <label class="form-label">Employee ID / Email</label>
+        <div class="input-group-custom">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" class="form-control-custom"
+            [(ngModel)]="credentials.identifier" name="identifier"
+            [placeholder]="selectedRole() === 'ADMIN' ? 'Admin email' : 'Employee ID or email'"
+            required />
+        </div>
+
+        <label class="form-label">Password</label>
+        <div class="input-group-custom">
+          <i class="bi bi-lock input-icon"></i>
+          <input [type]="showPassword() ? 'text' : 'password'"
+            class="form-control-custom"
+            [(ngModel)]="credentials.password" name="password"
+            placeholder="Enter your password" required />
+          <button type="button" class="toggle-pass" [class.hide]="!showPassword()" (click)="togglePassword()">
+          </button>
+        </div>
+
+        <button type="submit" class="btn-login" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2"></span> Signing in...
+          } @else {
+            Sign In
+          }
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+</div>

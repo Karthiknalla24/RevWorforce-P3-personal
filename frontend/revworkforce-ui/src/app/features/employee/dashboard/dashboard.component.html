@@ -1,0 +1,250 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar role="EMPLOYEE" [isOpen]="isSidebarOpen" />
+
+  <div class="main-content">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-breadcrumb">Home / Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Greeting -->
+      <div class="greeting-banner">
+        <div class="greeting-text">
+          <h2>{{ getGreeting() }}, {{ auth.currentUser()?.name || 'Employee' }}</h2>
+          <p>Here's an overview of your workspace for today.</p>
+        </div>
+        <div class="greeting-date">
+          <div class="date-num">{{ today | date:'d' }}</div>
+          <div class="date-label">{{ today | date:'MMM yyyy, EEE' }}</div>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ getTotalBalance() }}</div>
+            <div class="stat-label">Total Leave Balance</div>
+            <div class="stat-sublabel"><span class="tag tag-success">Available days</span></div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ getPendingCount() }}</div>
+            <div class="stat-label">Pending Leaves</div>
+            <div class="stat-sublabel"><span class="tag tag-warning">Awaiting approval</span></div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ goals().length }}</div>
+            <div class="stat-label">Active Goals</div>
+            <div class="stat-sublabel"><span class="tag tag-success">This quarter</span></div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value">{{ reviewsCount() }}</div>
+            <div class="stat-label">Performance Reviews</div>
+            <div class="stat-sublabel"><span class="tag tag-success">Submitted</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Leave Balance + Recent Leaves -->
+      <div class="row g-3 mb-4">
+
+        <!-- Leave Balance -->
+        <div class="col-lg-4">
+          <div class="section-header">
+            <div class="section-title">Leave Balance</div>
+            <a routerLink="/employee/my-leaves" class="btn-view-all">View All</a>
+          </div>
+          <div class="card-panel">
+            <div class="card-panel-header">
+              <div class="card-panel-title">By Leave Type</div>
+              <a routerLink="/employee/apply-leave" class="btn-primary-sm">Apply</a>
+            </div>
+            @for (balance of leaveBalances(); track $index) {
+              <div class="leave-type-row">
+                <div class="leave-dot" [style.background]="leaveColors[$index % leaveColors.length]"></div>
+                <div class="leave-type-name">{{ balance.leaveTypeName }}</div>
+                <div class="leave-bar-wrap">
+                  <div class="leave-bar-bg">
+                    <div class="leave-bar-fill"
+                      [style.width]="getBarWidth(balance)"
+                      [style.background]="leaveColors[$index % leaveColors.length]">
+                    </div>
+                  </div>
+                </div>
+                <div class="leave-count">{{ balance.remaining }} / {{ balance.totalQuota }}</div>
+              </div>
+            }
+            @empty {
+              <div class="text-center p-3 text-muted">No leave data available.</div>
+            }
+          </div>
+        </div>
+
+        <!-- Recent Leave Applications -->
+        <div class="col-lg-8">
+          <div class="section-header">
+            <div class="section-title">Recent Leave Applications</div>
+            <a routerLink="/employee/my-leaves" class="btn-view-all">View All</a>
+          </div>
+          <div class="card-panel">
+            @if (isLoading()) {
+              <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <table class="data-table">
+                <thead>
+                  <tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  @for (leave of recentLeaves(); track leave.id) {
+                    <tr>
+                      <td><strong>{{ leave.leaveType }}</strong></td>
+                      <td>{{ leave.startDate | date:'dd MMM yyyy' }}</td>
+                      <td>{{ leave.endDate | date:'dd MMM yyyy' }}</td>
+                      <td>{{ leave.days }}</td>
+                      <td>{{ leave.reason }}</td>
+                      <td>
+                        <span class="badge-status"
+                          [class.badge-approved]="leave.status === 'APPROVED'"
+                          [class.badge-rejected]="leave.status === 'REJECTED'"
+                          [class.badge-pending]="leave.status === 'PENDING'">
+                          {{ leave.status }}
+                        </span>
+                      </td>
+                      <td>
+                        @if (leave.status === 'PENDING') {
+                          <button class="btn-sm-action btn-reject" (click)="cancelLeave(leave.id)">
+                            Cancel
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                  @empty {
+                    <tr><td colspan="7" class="text-center text-muted p-4">No leave applications yet.</td></tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Quick Actions + Goals + Notifications -->
+      <div class="row g-3 mb-4">
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+          <div class="section-header"><div class="section-title">Quick Actions</div></div>
+          <div class="row g-2">
+            <div class="col-6"><a routerLink="/employee/apply-leave" class="quick-btn primary-action">Apply Leave</a></div>
+            <div class="col-6"><a routerLink="/employee/reviews" class="quick-btn">New Review</a></div>
+            <div class="col-6"><a routerLink="/employee/goals" class="quick-btn">Add Goal</a></div>
+            <div class="col-6"><a routerLink="/employee/profile" class="quick-btn">Edit Profile</a></div>
+            <div class="col-6"><a routerLink="/employee/holidays" class="quick-btn">Holidays</a></div>
+            <div class="col-6"><a routerLink="/directory" class="quick-btn">Directory</a></div>
+          </div>
+        </div>
+
+        <!-- My Goals -->
+        <div class="col-lg-4">
+          <div class="section-header">
+            <div class="section-title">My Goals</div>
+            <a routerLink="/employee/goals" class="btn-view-all">View All</a>
+          </div>
+          <div class="card-panel">
+            @for (goal of goals(); track goal.id) {
+              <div class="goal-item">
+                <div class="goal-header">
+                  <div>
+                    <div class="goal-name">{{ goal.title }}</div>
+                    <div class="goal-deadline">Due: {{ goal.deadline | date:'dd MMM yyyy' }}</div>
+                  </div>
+                  <span class="priority-badge"
+                    [class.priority-high]="goal.priority === 'HIGH'"
+                    [class.priority-medium]="goal.priority === 'MEDIUM'"
+                    [class.priority-low]="goal.priority === 'LOW'">
+                    {{ goal.priority === 'MEDIUM' ? 'Med' : goal.priority }}
+                  </span>
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.3rem;">Progress: {{ goal.progress }}%</div>
+                <div class="goal-progress-bar">
+                  <div class="goal-progress-fill" [style.width]="goal.progress + '%'" [style.background]="leaveColors[$index % leaveColors.length]"></div>
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="text-center p-3 text-muted">No goals yet.</div>
+            }
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-lg-4">
+          <div class="section-header">
+            <div class="section-title">Notifications</div>
+            <a routerLink="/notifications" class="btn-view-all">All</a>
+          </div>
+          <div class="card-panel">
+            @for (n of notifications(); track $index) {
+              <div class="notif-item" [class.unread]="!n.read">
+                <div class="notif-dot" [class.read]="n.read"></div>
+                <div>
+                  <div class="notif-text" [innerHTML]="n.message"></div>
+                  <div class="notif-time">{{ n.time }}</div>
+                </div>
+              </div>
+            }
+            @empty {
+              <div class="text-center p-3 text-muted">No notifications.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="section-header">
+            <div class="section-title">Company Announcements</div>
+            <a routerLink="/announcements" class="btn-view-all">View All</a>
+          </div>
+          <div class="card-panel">
+            <div class="row g-0">
+              @for (ann of announcements(); track ann.id) {
+                <div class="col-lg-4">
+                  <div class="announcement-item">
+                    <div>
+                      <div class="ann-title">{{ ann.title }}</div>
+                      <div class="ann-desc">{{ ann.description }}</div>
+                      <div class="ann-time">{{ ann.createdAt }}</div>
+                    </div>
+                  </div>
+                </div>
+              }
+              @empty {
+                <div class="col-12 text-center p-3 text-muted">No announcements.</div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,140 @@
+<div class="d-flex">
+  <div class="sidebar-overlay" [class.sidebar-open]="isSidebarOpen" (click)="toggleSidebar()"></div>
+  <app-sidebar [isOpen]='isSidebarOpen' />
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Team Performance Reviews</div>
+        <div class="page-breadcrumb">Home / Manager / Team Reviews</div>
+      </div>
+      <div class="topbar-right">
+        <button class="menu-toggle" (click)="toggleSidebar()">&#9776;</button>
+        <div class="topbar-avatar">{{ getInitials(auth.currentUser()?.name) }}</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">Team Performance Reviews</div>
+        </div>
+        @if (isLoading()) {
+          <div class="loading-spinner"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr><th>Employee</th><th>Year</th><th>Self Rating</th><th>Manager Rating</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              @for (review of reviews(); track review.id) {
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:700;">
+                        {{ getInitials(review.employeeName) }}
+                      </div>
+                      <span>{{ review.employeeName }}</span>
+                    </div>
+                  </td>
+                  <td>{{ review.year }}</td>
+                  <td>
+                    <span style="color:var(--warning);">{{ getStars(review.selfRating) }}</span>
+                    <span style="font-size:0.75rem;color:var(--text-muted);"> ({{ review.selfRating }}/5)</span>
+                  </td>
+                  <td>
+                    @if (review.managerRating > 0) {
+                      <span style="color:var(--success);">{{ getStars(review.managerRating) }}</span>
+                      <span style="font-size:0.75rem;color:var(--text-muted);"> ({{ review.managerRating }}/5)</span>
+                    } @else {
+                      <span style="color:var(--text-muted);">Not rated</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="badge-status"
+                      [class.badge-pending]="review.status === 'SUBMITTED'"
+                      [class.badge-approved]="review.status === 'REVIEWED'"
+                      [class.badge-inactive]="review.status === 'DRAFT'">
+                      {{ review.status }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (review.status === 'SUBMITTED') {
+                      <button class="btn-sm-action btn-approve" (click)="openFeedbackModal(review)">
+                        Provide Feedback
+                      </button>
+                    } @else if (review.status === 'REVIEWED') {
+                      <button class="btn-sm-action btn-view-p" (click)="openFeedbackModal(review)">
+                        View Feedback
+                      </button>
+                    } @else {
+                      <span style="color:var(--text-muted);font-size:0.875rem;">Awaiting submission</span>
+                    }
+                  </td>
+                </tr>
+              }
+              @empty {
+                <tr><td colspan="6" class="text-center p-4 text-muted">No team reviews found</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (showFeedbackModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()" style="max-width:700px;">
+        <div class="modal-header">
+          <h3 class="modal-title">Performance Review - {{ selectedReview()?.employeeName }}</h3>
+          <button type="button" (click)="closeModal()" class="modal-close">&times;</button>
+        </div>
+        <form (ngSubmit)="submitFeedback()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Year</label>
+              <input type="text" [value]="selectedReview()?.year" readonly class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Deliverables</label>
+              <textarea [value]="selectedReview()?.deliverables" readonly rows="2" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Accomplishments</label>
+              <textarea [value]="selectedReview()?.accomplishments" readonly rows="2" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Areas of Improvement</label>
+              <textarea [value]="selectedReview()?.improvementAreas" readonly rows="2" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Self Rating: {{ selectedReview()?.selfRating }}/5</label>
+              <div style="color:var(--warning);font-size:1.5rem;">{{ getStars(selectedReview()?.selfRating) }}</div>
+            </div>
+            <hr style="margin:1.5rem 0;border-color:var(--border);">
+            <div class="form-group">
+              <label class="form-label">Manager Feedback *</label>
+              <textarea [(ngModel)]="feedbackData.feedback" name="feedback" required rows="4" class="form-control" 
+                [readonly]="selectedReview()?.status === 'REVIEWED'"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Manager Rating * ({{ feedbackData.rating }}/5)</label>
+              <input type="range" [(ngModel)]="feedbackData.rating" name="rating" min="1" max="5" class="form-control" 
+                [disabled]="selectedReview()?.status === 'REVIEWED'" />
+              <div style="color:var(--success);font-size:1.5rem;margin-top:0.5rem;">{{ getStars(feedbackData.rating) }}</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" (click)="closeModal()" class="btn-secondary-sm">Close</button>
+            @if (selectedReview()?.status === 'SUBMITTED') {
+              <button type="submit" class="btn-primary-sm">
+                Submit Feedback
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

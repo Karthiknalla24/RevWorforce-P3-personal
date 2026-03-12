@@ -1,0 +1,217 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: revworkforce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Root@1323
+      MYSQL_DATABASE: user_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  config-server:
+    build: ./infrastructure/config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build: ./infrastructure/eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    ports:
+      - "8085:8085"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notification_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  employee-management-service:
+    build: ./services/employee-management-service
+    container_name: employee-management-service
+    ports:
+      - "8084:8084"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/employee_mgmt_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+  leave-service:
+    build: ./services/leave-service
+    container_name: leave-service
+    ports:
+      - "8082:8082"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/leave_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+  performance-service:
+    build: ./services/performance-service
+    container_name: performance-service
+    ports:
+      - "8083:8083"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/performance_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+  reporting-service:
+    build: ./services/reporting-service
+    container_name: reporting-service
+    ports:
+      - "8086:8086"
+    environment:
+      MYSQL_PASSWORD: Root@1323
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/reporting_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      leave-service:
+        condition: service_started
+      performance-service:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+  api-gateway:
+    build: ./infrastructure/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      employee-management-service:
+        condition: service_started
+      leave-service:
+        condition: service_started
+      performance-service:
+        condition: service_started
+      reporting-service:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+  revworkforce-ui:
+    build: ./frontend/revworkforce-ui
+    container_name: revworkforce-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - revworkforce-network
+
+networks:
+  revworkforce-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

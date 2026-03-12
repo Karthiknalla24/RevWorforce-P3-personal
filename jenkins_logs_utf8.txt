@@ -1,0 +1,241 @@
+﻿Running from: /usr/share/jenkins/jenkins.war
+docker : 2026-03-12 
+22:01:09.076+0000 
+[id=1]	INFO	winstone.Lo
+gger#logInternal: 
+Beginning extraction 
+from war file
+At line:1 char:1
++ docker logs 
+revworkforce-jenkins > 
+e:\RevWorkForce-P3\jenk
+ins_logs.tx ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (2026-03-12 22   
+ :0...n from war fi    
+le:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+webroot: /var/jenkins_home/war
+2026-03-12 
+22:01:23.355+0000 
+[id=1]	WARNING	o.e.j.ee
+9.nested.ContextHandler
+#setContextPath: Empty 
+contextPath
+2026-03-12 
+22:01:23.821+0000 
+[id=1]	INFO	org.eclipse
+.jetty.server.Server#do
+Start: jetty-12.1.5; 
+built: 2025-12-03T22:18
+:24.732Z; git: 4905d09d
+7b6801e792d7b73946cf7b6
+6e4be25d6; jvm 
+21.0.9+10-LTS
+2026-03-12 
+22:01:35.997+0000 
+[id=1]	INFO	o.e.j.e.w.S
+tandardDescriptorProces
+sor#visitServlet: NO 
+JSP Support for /, did 
+not find org.eclipse.je
+tty.ee9.jsp.JettyJspSer
+vlet
+2026-03-12 
+22:01:47.070+0000 
+[id=1]	INFO	o.e.j.s.Def
+aultSessionIdManager#do
+Start: Session 
+workerName=node0
+2026-03-12 
+22:01:49.436+0000 
+[id=1]	INFO	hudson.WebA
+ppMain#contextInitializ
+ed: Jenkins home 
+directory: 
+/var/jenkins_home 
+found at: EnvVars.maste
+rEnvVars.get("JENKINS_H
+OME")
+2026-03-12 
+22:01:50.297+0000 
+[id=1]	INFO	o.e.j.s.han
+dler.ContextHandler#doS
+tart: Started oeje9n.Co
+ntextHandler$CoreContex
+tHandler@3681037{Jenkin
+s v2.541.2,/,b=file:///
+var/jenkins_home/war/,a
+=AVAILABLE,h=oeje9n.Con
+textHandler$CoreContext
+Handler$CoreToNestedHan
+dler@2459319c{STARTED}}
+2026-03-12 
+22:01:50.367+0000 
+[id=1]	INFO	o.e.j.serve
+r.AbstractConnector#doS
+tart: Started oejs.Serv
+erConnector@2aa6311a{HT
+TP/1.1, (http/1.1)}{0.0
+.0.0:8080}
+2026-03-12 
+22:01:50.377+0000 
+[id=1]	INFO	org.eclipse
+.jetty.server.Server#do
+Start: Started oejs.Ser
+ver@78525ef9{STARTING}[
+12.1.5,sto=0] @26562ms
+2026-03-12 
+22:01:50.436+0000 
+[id=34]	INFO	winstone.L
+ogger#logInternal: 
+Winstone Servlet 
+Engine running: 
+controlPort=disabled
+2026-03-12 
+22:01:51.213+0000 
+[id=33]	INFO	jenkins.mo
+del.Jenkins#<init>: 
+Starting version 
+2.541.2
+2026-03-12 
+22:01:51.566+0000 
+[id=42]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Started 
+initialization
+2026-03-12 
+22:01:51.614+0000 
+[id=40]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Listed all 
+plugins
+2026-03-12 
+22:01:55.864+0000 
+[id=42]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Prepared all 
+plugins
+2026-03-12 
+22:01:55.871+0000 
+[id=47]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Started all 
+plugins
+2026-03-12 
+22:01:55.873+0000 
+[id=47]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Augmented all 
+extensions
+2026-03-12 
+22:01:56.263+0000 
+[id=40]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: System config 
+loaded
+2026-03-12 
+22:01:56.264+0000 
+[id=44]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: System config 
+adapted
+2026-03-12 
+22:01:56.264+0000 
+[id=44]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Loaded all jobs
+2026-03-12 
+22:01:56.270+0000 
+[id=43]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Configuration 
+for all jobs updated
+2026-03-12 
+22:01:56.523+0000 
+[id=61]	INFO	hudson.uti
+l.Retrier#start: 
+Attempt #1 to do the 
+action check updates 
+server
+2026-03-12 
+22:01:58.201+0000 
+[id=45]	INFO	jenkins.in
+stall.SetupWizard#init:
+ 
+[LF]> 
+[LF]> *****************
+***********************
+*********************
+[LF]> *****************
+***********************
+*********************
+[LF]> *****************
+***********************
+*********************
+[LF]> 
+[LF]> Jenkins initial 
+setup is required. An 
+admin user has been 
+created and a password 
+generated.
+[LF]> Please use the 
+following password to 
+proceed to 
+installation:
+[LF]> 
+[LF]> 8af0bfb4f50f497b8
+b9e2cb676ee672f
+[LF]> 
+[LF]> This may also be 
+found at: /var/jenkins_
+home/secrets/initialAdm
+inPassword
+[LF]> 
+[LF]> *****************
+***********************
+*********************
+[LF]> *****************
+***********************
+*********************
+[LF]> *****************
+***********************
+*********************
+
+2026-03-12 
+22:04:31.144+0000 
+[id=43]	INFO	jenkins.In
+itReactorRunner$1#onAtt
+ained: Completed 
+initialization
+2026-03-12 
+22:04:31.971+0000 
+[id=33]	INFO	hudson.lif
+ecycle.Lifecycle#onRead
+y: Jenkins is fully up 
+and running
+2026-03-12 
+22:04:36.075+0000 
+[id=61]	INFO	h.m.Downlo
+adService$Downloadable#
+load: Obtained the 
+updated data file for h
+udson.tasks.Maven.Maven
+Installer
+2026-03-12 
+22:04:36.139+0000 
+[id=61]	INFO	hudson.uti
+l.Retrier#start: 
+Performed the action 
+check updates server 
+successfully at the 
+attempt #1

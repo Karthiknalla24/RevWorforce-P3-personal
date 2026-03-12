@@ -1,0 +1,4 @@
+/* Sidebar uses same color as other roles */
+:host ::ng-deep .sidebar {
+  background: #1E3A8A;
+}
