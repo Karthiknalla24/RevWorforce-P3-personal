@@ -81,23 +81,6 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                dir('frontend/revworkforce-ui') {
-                    echo "Building Angular Frontend..."
-                    script {
-                        if (isUnix()) {
-                            sh "npm install"
-                            sh "npm run build --configuration=production"
-                        } else {
-                            bat "npm install"
-                            bat "npm run build --configuration=production"
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Docker Build & Push') {
             steps {
                 script {
