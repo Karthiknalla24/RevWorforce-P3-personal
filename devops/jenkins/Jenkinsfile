@@ -10,7 +10,7 @@ pipeline {
         // --- SONARQUBE CONFIGURATION ---
         // If SonarQube is in Docker: http://revworkforce-sonarqube:9000
         // If SonarQube is on Host (Windows): http://host.docker.internal:9000
-        SONAR_HOST_URL = "http://revworkforce-sonarqube:9000"
+        SONAR_HOST_URL = "http://host.docker.internal:9000"
         SONAR_TOKEN = "squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
     }
 
