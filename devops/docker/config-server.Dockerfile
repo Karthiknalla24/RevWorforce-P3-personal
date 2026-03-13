@@ -1,5 +1,5 @@
 # Config Server Dockerfile
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 COPY infrastructure/config-server/target/*.jar app.jar
 EXPOSE 8888
