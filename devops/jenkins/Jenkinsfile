@@ -4,7 +4,7 @@ pipeline {
     environment {
         // --- DOCKER HUB CONFIGURATION ---
         DOCKER_HUB_USER = 'karthiknalla24'
-        DOCKER_HUB_CREDS = 'docker-hub-credentials' // This must match the Credential ID in Jenkins
+        DOCKER_HUB_CREDS = 'docker-hub-credentials2' // This must match the Credential ID in Jenkins
         IMAGE_VERSION = "v${BUILD_NUMBER}"
         
         // --- SONARQUBE CONFIGURATION ---
