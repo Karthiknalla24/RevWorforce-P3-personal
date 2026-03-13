@@ -6,6 +6,12 @@ pipeline {
         DOCKER_HUB_USER = 'karthiknalla24'
         DOCKER_HUB_CREDS = 'docker-hub-credentials' // This must match the Credential ID in Jenkins
         IMAGE_VERSION = "v${BUILD_NUMBER}"
+        
+        // --- SONARQUBE CONFIGURATION ---
+        // If SonarQube is in Docker: http://revworkforce-sonarqube:9000
+        // If SonarQube is on Host (Windows): http://host.docker.internal:9000
+        SONAR_HOST_URL = "http://revworkforce-sonarqube:9000"
+        SONAR_TOKEN = "squ_77d7a794b3cf6981ac172a48258e10b019a6e56a"
     }
 
     stages {
@@ -65,9 +71,9 @@ pipeline {
                             echo "Analyzing ${service} with SonarQube..."
                             if (isUnix()) {
                                 sh "chmod +x mvnw"
-                                sh "./mvnw sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B -U"
+                                sh "./mvnw sonar:sonar -Dsonar.host.url=${env.SONAR_HOST_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dmaven.test.skip=true -B -U"
                             } else {
-                                bat "mvnw.cmd sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B -U"
+                                bat "mvnw.cmd sonar:sonar -Dsonar.host.url=${env.SONAR_HOST_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dmaven.test.skip=true -B -U"
                             }
                         }
                     }
