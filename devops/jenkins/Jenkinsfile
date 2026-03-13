@@ -97,21 +97,23 @@ pipeline {
                         [name: 'revworkforce-ui', path: 'frontend/revworkforce-ui', dockerfile: 'devops/docker/frontend.Dockerfile']
                     ]
 
-                    // Wrap pushing in docker.withRegistry for authentication
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDS) {
+                    // Use withCredentials for Docker Hub authentication
+                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDS, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
+                        
                         for (service in services) {
                             echo "Building and Pushing Image for: ${service.name}"
                             def fullImageName = "${DOCKER_HUB_USER}/${service.name}"
                             
                             // Build image
-                            def customImage = docker.build("${fullImageName}:${IMAGE_VERSION}", "-f ${service.dockerfile} .")
+                            sh "docker build -t ${fullImageName}:${IMAGE_VERSION} -t ${fullImageName}:latest -f ${service.dockerfile} ."
                             
-                            // Push specific version
-                            customImage.push()
-                            
-                            // Push 'latest'
-                            customImage.push('latest')
+                            // Push images
+                            sh "docker push ${fullImageName}:${IMAGE_VERSION}"
+                            sh "docker push ${fullImageName}:latest"
                         }
+                        
+                        sh "docker logout"
                     }
                 }
             }
