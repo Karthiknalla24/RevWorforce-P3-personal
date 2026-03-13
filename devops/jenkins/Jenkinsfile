@@ -35,9 +35,9 @@ pipeline {
                             echo "Building ${service}..."
                             if (isUnix()) {
                                 sh "chmod +x mvnw"
-                                sh "./mvnw clean package -Dmaven.test.skip=true -B"
+                                sh "./mvnw clean package -Dmaven.test.skip=true -B -U"
                             } else {
-                                bat "mvnw.cmd clean package -Dmaven.test.skip=true -B"
+                                bat "mvnw.cmd clean package -Dmaven.test.skip=true -B -U"
                             }
                         }
                     }
@@ -65,9 +65,9 @@ pipeline {
                             echo "Analyzing ${service} with SonarQube..."
                             if (isUnix()) {
                                 sh "chmod +x mvnw"
-                                sh "./mvnw sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B"
+                                sh "./mvnw sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B -U"
                             } else {
-                                bat "mvnw.cmd sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B"
+                                bat "mvnw.cmd sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=squ_77d7a794b3cf6981ac172a48258e10b019a6e56a -Dmaven.test.skip=true -B -U"
                             }
                         }
                     }
