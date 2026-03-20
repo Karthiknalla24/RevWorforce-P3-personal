@@ -21,4 +21,14 @@ public interface UserServiceClient {
 
     @GetMapping("/api/users/directory")
     List<Map<String, Object>> getEmployeeDirectory();
+
+    @GetMapping("/api/users/filter")
+    List<Map<String, Object>> filterUsers(
+            @org.springframework.web.bind.annotation.RequestParam(value = "departmentId", required = false) Long departmentId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "designationId", required = false) Long designationId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "active", required = false) Boolean active,
+            @org.springframework.web.bind.annotation.RequestParam(value = "role", required = false) String role);
+
+    @GetMapping("/api/users/managers")
+    List<Map<String, Object>> getAllManagers();
 }

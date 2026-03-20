@@ -15,7 +15,7 @@ public interface LeaveService {
     Leave rejectLeave(Long leaveId, Long managerId, String comment);
     void cancelLeave(Long leaveId, Long userId);
     List<Leave> getMyLeaves(Long userId);
-    List<Leave> getTeamLeaves(Long managerId);
+    List<Leave> getTeamLeaves(Long managerId, String role);
     List<LeaveBalance> getMyBalance(Long userId);
     LeaveBalance assignLeaveBalance(Long userId, Long leaveTypeId, int totalDays);
     LeaveBalance adjustLeaveBalance(Long userId, Long leaveTypeId, int adjustment, String reason);

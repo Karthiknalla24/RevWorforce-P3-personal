@@ -17,15 +17,18 @@
     <div class="content-area">
       <!-- Action Bar -->
       <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-          <div class="d-flex gap-2 align-items-center">
-            <select [(ngModel)]="cleanupDuration" class="form-select" style="width: auto; height: 38px; border-radius: 8px;">
-               <option value="24h">Last 24 Hours</option>
-               <option value="week">Last Week</option>
-               <option value="month">Last Month</option>
+          <div class="d-flex gap-2 align-items-center p-2" style="border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.02);">
+            <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-color); margin-left: 0.5rem;">
+              Delete logs older than:
+            </span>
+            <select [(ngModel)]="cleanupDuration" class="form-select form-select-sm border-0 bg-transparent fw-bold" style="width: auto; cursor: pointer; box-shadow: none;">
+               <option value="24h">24 Hours</option>
+               <option value="week">1 Week</option>
+               <option value="month">1 Month</option>
             </select>
-            <button class="btn" style="background: var(--danger); color: white; height: 38px; border-radius: 8px;" 
+            <button class="btn btn-sm" style="background: var(--danger); color: white; border-radius: 6px; padding: 0.35rem 1rem;" 
                     (click)="performCleanup()" [disabled]="isCleaning()">
-              {{ isCleaning() ? 'Cleaning...' : 'Delete Old Logs' }}
+              <i class="bi bi-trash3 me-1"></i> {{ isCleaning() ? 'Cleaning...' : 'Delete' }}
             </button>
           </div>
 

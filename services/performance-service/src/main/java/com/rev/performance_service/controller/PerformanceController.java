@@ -90,8 +90,10 @@ public class PerformanceController {
     }
 
     @GetMapping("/reviews/manager/{managerId}/team")
-    public ResponseEntity<List<PerformanceReview>> getTeamReviews(@PathVariable("managerId") Long managerId) {
-        return ResponseEntity.ok(performanceService.getTeamReviews(managerId));
+    public ResponseEntity<List<PerformanceReview>> getTeamReviews(
+            @PathVariable("managerId") Long managerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+        return ResponseEntity.ok(performanceService.getTeamReviews(managerId, role));
     }
 
     @PostMapping("/goals")
@@ -159,8 +161,10 @@ public class PerformanceController {
     }
 
     @GetMapping("/goals")
-    public ResponseEntity<List<Goal>> getTeamGoals(@RequestHeader("X-User-Id") Long managerId) {
-        return ResponseEntity.ok(performanceService.getTeamGoals(managerId));
+    public ResponseEntity<List<Goal>> getTeamGoals(
+            @RequestHeader("X-User-Id") Long managerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+        return ResponseEntity.ok(performanceService.getTeamGoals(managerId, role));
     }
 
     @DeleteMapping("/goals/{id}")

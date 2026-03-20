@@ -43,6 +43,11 @@ public class PerformanceServiceImpl implements PerformanceService {
 
     @Override
     public PerformanceReview createReview(Long userId, int year, String deliverables, String accomplishments, String improvements, int selfRating) {
+        // Check for existing review for the same year
+        if (reviewRepository.existsByUserIdAndYear(userId, year)) {
+            throw new RuntimeException("A performance review already exists for user ID " + userId + " for the year " + year);
+        }
+
         PerformanceReview review = new PerformanceReview();
         review.setUserId(userId);
         review.setYear(year);
@@ -79,8 +84,27 @@ public class PerformanceServiceImpl implements PerformanceService {
                 notification.put("type", "REVIEW_SUBMITTED_TO_MANAGER");
                 notificationClient.createNotification(notification);
             }
+
+            // ADMIN Oversight: Notify Admins if a Manager submitted a review
+            String userRole = (empInfo != null && empInfo.get("role") != null) ? empInfo.get("role").toString() : "";
+            System.out.println("[PerformanceService] User role for review: " + userRole);
+            if ("MANAGER".equalsIgnoreCase(userRole)) {
+                System.out.println("[PerformanceService] Notifying Admins for Manager review...");
+                List<Map<String, Object>> admins = userClient.filterUsers(null, null, true, "ADMIN");
+                System.out.println("[PerformanceService] Found " + (admins != null ? admins.size() : 0) + " admins");
+                if (admins != null) {
+                    for (Map<String, Object> admin : admins) {
+                        System.out.println("[PerformanceService] Notifying Admin " + admin.get("id"));
+                        Map<String, Object> adminNotification = new HashMap<>();
+                        adminNotification.put("userId", Long.valueOf(admin.get("id").toString()));
+                        adminNotification.put("message", "[Manager Performance Review] " + empName + " (Manager) has submitted their performance review");
+                        adminNotification.put("type", "MANAGER_REVIEW_SUBMITTED");
+                        notificationClient.createNotification(adminNotification);
+                    }
+                }
+            }
         } catch (Exception e) {
-            System.err.println("Failed to notify manager for review submission: " + e.getMessage());
+            System.err.println("[PerformanceService] Failed to notify admins for review: " + e.getMessage());
         }
         
         // Notify Employee
@@ -123,20 +147,30 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public List<PerformanceReview> getTeamReviews(Long managerId) {
-        List<Map<String, Object>> teamMembers = userClient.getTeamMembers(managerId);
-        if (teamMembers == null || teamMembers.isEmpty()) {
-            return java.util.Collections.emptyList();
-        }
-
-        Map<Long, String> nameMap = new HashMap<>();
+    public List<PerformanceReview> getTeamReviews(Long managerId, String role) {
         List<Long> memberIds = new java.util.ArrayList<>();
-        
-        for (Map<String, Object> m : teamMembers) {
-            if (m.get("id") != null) {
-                Long id = Long.valueOf(m.get("id").toString());
-                memberIds.add(id);
-                nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+        Map<Long, String> nameMap = new HashMap<>();
+
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            List<Map<String, Object>> managers = userClient.getAllManagers();
+            for (Map<String, Object> m : managers) {
+                if (m.get("id") != null) {
+                    Long id = Long.valueOf(m.get("id").toString());
+                    memberIds.add(id);
+                    nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+                }
+            }
+        } else {
+            List<Map<String, Object>> teamMembers = userClient.getTeamMembers(managerId);
+            if (teamMembers == null || teamMembers.isEmpty()) {
+                return java.util.Collections.emptyList();
+            }
+            for (Map<String, Object> m : teamMembers) {
+                if (m.get("id") != null) {
+                    Long id = Long.valueOf(m.get("id").toString());
+                    memberIds.add(id);
+                    nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+                }
             }
         }
         
@@ -176,8 +210,27 @@ public class PerformanceServiceImpl implements PerformanceService {
                 notification.put("type", "GOAL_CREATED");
                 notificationClient.createNotification(notification);
             }
+
+            // ADMIN Oversight: Notify Admins if a Manager created a goal
+            String userRole = (empInfo != null && empInfo.get("role") != null) ? empInfo.get("role").toString() : "";
+            System.out.println("[PerformanceService] User role for goal: " + userRole);
+            if ("MANAGER".equalsIgnoreCase(userRole)) {
+                System.out.println("[PerformanceService] Notifying Admins for Manager goal...");
+                List<Map<String, Object>> admins = userClient.filterUsers(null, null, true, "ADMIN");
+                System.out.println("[PerformanceService] Found " + (admins != null ? admins.size() : 0) + " admins");
+                if (admins != null) {
+                    for (Map<String, Object> admin : admins) {
+                        System.out.println("[PerformanceService] Notifying Admin " + admin.get("id"));
+                        Map<String, Object> adminNotification = new HashMap<>();
+                        adminNotification.put("userId", Long.valueOf(admin.get("id").toString()));
+                        adminNotification.put("message", "[Manager Goal] " + empName + " (Manager) has created a new performance goal: " + title);
+                        adminNotification.put("type", "MANAGER_GOAL_CREATED");
+                        notificationClient.createNotification(adminNotification);
+                    }
+                }
+            }
         } catch (Exception e) {
-            System.err.println("Failed to notify manager for goal creation: " + e.getMessage());
+            System.err.println("[PerformanceService] Failed to notify admins for goal: " + e.getMessage());
         }
 
         // Notify Employee
@@ -231,20 +284,30 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public List<Goal> getTeamGoals(Long managerId) {
-        List<Map<String, Object>> teamMembers = userClient.getTeamMembers(managerId);
-        if (teamMembers == null || teamMembers.isEmpty()) {
-            return java.util.Collections.emptyList();
-        }
-
-        Map<Long, String> nameMap = new HashMap<>();
+    public List<Goal> getTeamGoals(Long managerId, String role) {
         List<Long> memberIds = new java.util.ArrayList<>();
-        
-        for (Map<String, Object> m : teamMembers) {
-            if (m.get("id") != null) {
-                Long id = Long.valueOf(m.get("id").toString());
-                memberIds.add(id);
-                nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+        Map<Long, String> nameMap = new HashMap<>();
+
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            List<Map<String, Object>> managers = userClient.getAllManagers();
+            for (Map<String, Object> m : managers) {
+                if (m.get("id") != null) {
+                    Long id = Long.valueOf(m.get("id").toString());
+                    memberIds.add(id);
+                    nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+                }
+            }
+        } else {
+            List<Map<String, Object>> teamMembers = userClient.getTeamMembers(managerId);
+            if (teamMembers == null || teamMembers.isEmpty()) {
+                return java.util.Collections.emptyList();
+            }
+            for (Map<String, Object> m : teamMembers) {
+                if (m.get("id") != null) {
+                    Long id = Long.valueOf(m.get("id").toString());
+                    memberIds.add(id);
+                    nameMap.put(id, m.get("name") != null ? m.get("name").toString() : "Unknown");
+                }
             }
         }
         

@@ -139,10 +139,10 @@ public class UserManagementController {
 
     @GetMapping("/filter")
     public ResponseEntity<List<EmployeeDirectoryResponse>> filterUsers(
-            @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) Long designationId,
-            @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) String role) {
+            @RequestParam(name = "departmentId", required = false) Long departmentId,
+            @RequestParam(name = "designationId", required = false) Long designationId,
+            @RequestParam(name = "active", required = false) Boolean active,
+            @RequestParam(name = "role", required = false) String role) {
         return ResponseEntity.ok(userService.filterUsers(departmentId, designationId, active, role));
     }
 

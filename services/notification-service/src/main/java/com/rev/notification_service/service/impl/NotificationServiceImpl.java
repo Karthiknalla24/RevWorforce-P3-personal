@@ -28,7 +28,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getNotificationsByUserId(Long userId) {
-        return mapper.toResponseList(repository.findByUserId(userId));
+        return mapper.toResponseList(repository.findByUserIdOrderByCreatedAtDesc(userId));
     }
 
     @Override
@@ -41,7 +41,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void markAllAsRead(Long userId) {
-        List<Notification> notifications = repository.findByUserIdAndReadStatusFalse(userId);
+        List<Notification> notifications = repository.findByUserIdAndReadStatusFalseOrderByCreatedAtDesc(userId);
         notifications.forEach(n -> n.setReadStatus(true));
         repository.saveAll(notifications);
     }
@@ -49,12 +49,19 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Async("notificationExecutor")
     public void createNotification(Long userId, String message, String type) {
-        Notification notification = new Notification();
-        notification.setUserId(userId);
-        notification.setMessage(message);
-        notification.setType(type);
-        notification.setReadStatus(false);
-        repository.save(notification);
+        System.out.println("[NotificationService] Creating notification for user " + userId + " type: " + type);
+        try {
+            Notification notification = new Notification();
+            notification.setUserId(userId);
+            notification.setMessage(message);
+            notification.setType(type);
+            notification.setReadStatus(false);
+            repository.save(notification);
+            System.out.println("[NotificationService] Notification saved successfully");
+        } catch (Exception e) {
+            System.err.println("[NotificationService] Error saving notification: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -71,7 +78,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void clearNotifications(Long userId) {
-        List<Notification> notifications = repository.findByUserId(userId);
+        List<Notification> notifications = repository.findByUserIdOrderByCreatedAtDesc(userId);
         repository.deleteAll(notifications);
     }
 }

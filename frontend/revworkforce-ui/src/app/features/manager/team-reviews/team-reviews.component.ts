@@ -46,7 +46,7 @@ export class TeamReviewsComponent implements OnInit {
 
   openFeedbackModal(review: any) {
     this.selectedReview.set(review);
-    this.feedbackData = { feedback: review.managerFeedback || '', rating: review.managerRating || 3 };
+    this.feedbackData = { feedback: review.feedback || '', rating: review.managerRating || 3 };
     this.showFeedbackModal.set(true);
   }
 

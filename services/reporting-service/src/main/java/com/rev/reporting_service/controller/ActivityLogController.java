@@ -21,8 +21,8 @@ public class ActivityLogController {
 
     @GetMapping
     public ResponseEntity<Page<ActivityLogResponse>> getPaginatedActivities(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(activityLogService.getPaginatedActivities(pageable));
     }
@@ -34,9 +34,9 @@ public class ActivityLogController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<Page<ActivityLogResponse>> getActivitiesByUser(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(activityLogService.getActivitiesByUser(userId, pageable));
     }
@@ -51,7 +51,7 @@ public class ActivityLogController {
     }
 
     @DeleteMapping("/cleanup")
-    public ResponseEntity<Void> cleanupLogs(@RequestParam String duration) {
+    public ResponseEntity<Void> cleanupLogs(@RequestParam("duration") String duration) {
         activityLogService.deleteLogsByDuration(duration);
         return ResponseEntity.ok().build();
     }

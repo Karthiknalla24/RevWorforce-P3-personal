@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "performance_reviews")
+@Table(name = "performance_reviews", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "year"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

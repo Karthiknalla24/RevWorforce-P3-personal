@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface LeaveClient {
     
     @GetMapping("/api/leaves/user/{userId}")
-    Object getUserLeaves(@PathVariable Long userId);
+    Object getUserLeaves(@PathVariable("userId") Long userId);
     
     @GetMapping("/api/leaves/balance/{userId}")
-    Object getUserBalance(@PathVariable Long userId);
+    Object getUserBalance(@PathVariable("userId") Long userId);
     
     @GetMapping("/api/leaves/types")
     Object getAllLeaveTypes();

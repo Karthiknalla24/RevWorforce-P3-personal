@@ -20,22 +20,22 @@ public class ReportController {
     }
 
     @GetMapping("/leave/{userId}")
-    public ResponseEntity<Map<String, Object>> getLeaveReport(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, Object>> getLeaveReport(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(reportService.getLeaveReport(userId));
     }
 
     @GetMapping("/performance/{userId}")
-    public ResponseEntity<Map<String, Object>> getPerformanceReport(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, Object>> getPerformanceReport(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(reportService.getPerformanceReport(userId));
     }
 
     @GetMapping("/employee/{userId}")
-    public ResponseEntity<Map<String, Object>> getEmployeeReport(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, Object>> getEmployeeReport(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(reportService.getEmployeeReport(userId));
     }
 
     @GetMapping("/department/{departmentId}")
-    public ResponseEntity<Map<String, Object>> getDepartmentReport(@PathVariable Long departmentId) {
+    public ResponseEntity<Map<String, Object>> getDepartmentReport(@PathVariable("departmentId") Long departmentId) {
         return ResponseEntity.ok(reportService.getDepartmentReport(departmentId));
     }
 }

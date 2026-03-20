@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface PerformanceClient {
     
     @GetMapping("/api/performance/reviews/user/{userId}")
-    Object getUserReviews(@PathVariable Long userId);
+    Object getUserReviews(@PathVariable("userId") Long userId);
     
     @GetMapping("/api/performance/goals/user/{userId}")
-    Object getUserGoals(@PathVariable Long userId);
+    Object getUserGoals(@PathVariable("userId") Long userId);
 }

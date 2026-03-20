@@ -6,6 +6,7 @@ import com.rev.leave_service.entity.*;
 import com.rev.leave_service.repository.*;
 import com.rev.leave_service.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,18 +90,59 @@ public class LeaveServiceImpl implements LeaveService {
         logActivity(userId, "LEAVE_APPLIED", "Applied for leave type ID " + leaveTypeId + " from " + startDate + " to " + endDate);
         return savedLeave;
     }
-
-    private void notifyStakeholders(Long userId, LocalDate start, LocalDate end) {
+    @Async
+    public void notifyStakeholders(Long userId, LocalDate start, LocalDate end) {
+        System.out.println("[LeaveService] Notifying stakeholders for user " + userId);
         try {
+            // Fetch employee name
+            Map<String, Object> employee = userServiceClient.getUserById(userId);
+            String employeeName = (employee != null && employee.get("name") != null) ? 
+                    employee.get("name").toString() : "Employee ID: " + userId;
+
             Map<String, Object> manager = userServiceClient.getManager(userId);
             if (manager != null && manager.containsKey("id")) {
+                System.out.println("[LeaveService] Notifying Manager " + manager.get("id"));
                 Map<String, Object> notification = new HashMap<>();
                 notification.put("userId", Long.valueOf(manager.get("id").toString()));
-                notification.put("message", "New leave request for " + start + " to " + end);
+                notification.put("message", employeeName + " has applied for leave from " + start + " to " + end);
                 notification.put("type", "LEAVE_APPLIED");
                 notificationServiceClient.createNotification(notification);
             }
-        } catch (Exception e) {}
+
+            // ADMIN Oversight: Notify all Admins if a Manager is applying for leave
+            String userRole = (employee != null && employee.get("role") != null) ? employee.get("role").toString() : "";
+            System.out.println("[LeaveService] User role: " + userRole);
+            if ("MANAGER".equalsIgnoreCase(userRole)) {
+                System.out.println("[LeaveService] User is a Manager, notifying Admins...");
+                List<Map<String, Object>> admins = userServiceClient.filterUsers(null, null, true, "ADMIN");
+                System.out.println("[LeaveService] Found " + (admins != null ? admins.size() : 0) + " admins");
+                if (admins != null) {
+                    for (Map<String, Object> admin : admins) {
+                        System.out.println("[LeaveService] Notifying Admin " + admin.get("id"));
+                        Map<String, Object> adminNotification = new HashMap<>();
+                        adminNotification.put("userId", Long.valueOf(admin.get("id").toString()));
+                        adminNotification.put("message", "[Manager Leave Request] " + employeeName + " (Manager) has applied for leave from " + start + " to " + end);
+                        adminNotification.put("type", "MANAGER_LEAVE_REQUEST");
+                        notificationServiceClient.createNotification(adminNotification);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[LeaveService] Failed to notify stakeholders: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void notifyEmployeeStatusUpdate(Long userId, String status, String comment) {
+        try {
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("userId", userId);
+            notification.put("message", "Your leave request has been " + status + ". Manager comment: " + (comment != null ? comment : "No comments"));
+            notification.put("type", "LEAVE_STATUS_UPDATE");
+            notificationServiceClient.createNotification(notification);
+        } catch (Exception e) {
+            System.err.println("Failed to notify employee for leave status update: " + e.getMessage());
+        }
     }
 
     @Override
@@ -120,6 +162,8 @@ public class LeaveServiceImpl implements LeaveService {
         balance.setRemainingDays(balance.getTotalDays() - balance.getUsedDays());
         leaveBalanceRepository.save(balance);
 
+        notifyEmployeeStatusUpdate(leave.getUserId(), "APPROVED", comment);
+        
         logActivity(leave.getUserId(), "LEAVE_APPROVED", "Leave request approved");
         return leaveRepository.save(leave);
     }
@@ -131,6 +175,9 @@ public class LeaveServiceImpl implements LeaveService {
         leave.setStatus(LeaveStatus.REJECTED);
         leave.setManagerId(managerId);
         leave.setManagerComment(comment);
+
+        notifyEmployeeStatusUpdate(leave.getUserId(), "REJECTED", comment);
+
         logActivity(leave.getUserId(), "LEAVE_REJECTED", "Leave request rejected");
         return leaveRepository.save(leave);
     }
@@ -152,11 +199,21 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public List<Leave> getTeamLeaves(Long managerId) {
-        List<Map<String, Object>> teamMembers = userServiceClient.getTeamMembers(managerId);
-        List<Long> memberIds = teamMembers.stream()
-                .map(m -> Long.valueOf(m.get("id").toString()))
-                .collect(Collectors.toList());
+    public List<Leave> getTeamLeaves(Long managerId, String role) {
+        List<Long> memberIds;
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            // Admin sees all manager leaves
+            List<Map<String, Object>> managers = userServiceClient.getAllManagers();
+            memberIds = managers.stream()
+                    .map(m -> Long.valueOf(m.get("id").toString()))
+                    .collect(Collectors.toList());
+        } else {
+            List<Map<String, Object>> teamMembers = userServiceClient.getTeamMembers(managerId);
+            memberIds = teamMembers.stream()
+                    .map(m -> Long.valueOf(m.get("id").toString()))
+                    .collect(Collectors.toList());
+        }
+        
         return leaveRepository.findAll().stream()
                 .filter(l -> memberIds.contains(l.getUserId()))
                 .collect(Collectors.toList());

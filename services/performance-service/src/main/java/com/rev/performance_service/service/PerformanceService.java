@@ -21,7 +21,7 @@ public interface PerformanceService {
 
     List<PerformanceReview> getMyReviews(Long userId);
 
-    List<PerformanceReview> getTeamReviews(Long managerId);
+    List<PerformanceReview> getTeamReviews(Long managerId, String role);
 
     // --- Goals ---
     Goal createGoal(Long userId, String title, String description, LocalDate deadline, GoalPriority priority);
@@ -32,7 +32,7 @@ public interface PerformanceService {
 
     List<Goal> getMyGoals(Long userId);
 
-    List<Goal> getTeamGoals(Long managerId);
+    List<Goal> getTeamGoals(Long managerId, String role);
 
     void deleteGoal(Long goalId);
 }

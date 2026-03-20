@@ -77,7 +77,7 @@ public class UserDirectoryServiceImpl implements UserDirectoryService {
             (departmentId == null || departmentId.equals(u.getDepartmentId())) &&
             (designationId == null || designationId.equals(u.getDesignationId())) &&
             (active == null || active.equals(u.isActive())) &&
-            (role == null || role.equals(u.getRole()))
+            (role == null || role.equalsIgnoreCase(u.getRole() != null ? u.getRole().toString() : null))
         ).toList();
     }
 

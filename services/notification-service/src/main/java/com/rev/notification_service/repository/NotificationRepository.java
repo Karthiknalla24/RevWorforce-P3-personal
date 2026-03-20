@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByUserId(Long userId);
-    List<Notification> findByUserIdAndReadStatusFalse(Long userId);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Notification> findByUserIdAndReadStatusFalseOrderByCreatedAtDesc(Long userId);
     long countByUserIdAndReadStatusFalse(Long userId);
 }

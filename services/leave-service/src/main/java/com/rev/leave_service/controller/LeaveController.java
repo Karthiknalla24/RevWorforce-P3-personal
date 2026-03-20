@@ -98,10 +98,12 @@ public class LeaveController {
     }
 
     @GetMapping("/manager/{managerId}/team")
-    public ResponseEntity<List<LeaveResponse>> getTeamLeaves(@PathVariable("managerId") Long managerId) {
+    public ResponseEntity<List<LeaveResponse>> getTeamLeaves(
+            @PathVariable("managerId") Long managerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
         Map<Long, String> names = getLeaveTypeNames();
         Map<Long, String> userNames = getUserNames();
-        List<LeaveResponse> result = leaveService.getTeamLeaves(managerId).stream()
+        List<LeaveResponse> result = leaveService.getTeamLeaves(managerId, role).stream()
                 .map(l -> leaveMapper.toLeaveResponse(l, names, userNames))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);

@@ -28,13 +28,13 @@ public class EmployeeController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing employee profile")
-    public ResponseEntity<EmployeeResponse> updateEmployee(@PathVariable Long id, @RequestBody UpdateEmployeeRequest request) {
+    public ResponseEntity<EmployeeResponse> updateEmployee(@PathVariable("id") Long id, @RequestBody UpdateEmployeeRequest request) {
         return ResponseEntity.ok(employeeService.updateEmployee(id, request));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get employee profile by ID")
-    public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
@@ -46,14 +46,14 @@ public class EmployeeController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an employee profile")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable("id") Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/department/{departmentId}")
     @Operation(summary = "Get employees by department")
-    public ResponseEntity<List<EmployeeResponse>> getEmployeesByDepartment(@PathVariable Long departmentId) {
+    public ResponseEntity<List<EmployeeResponse>> getEmployeesByDepartment(@PathVariable("departmentId") Long departmentId) {
         return ResponseEntity.ok(employeeService.getEmployeesByDepartment(departmentId));
     }
 }

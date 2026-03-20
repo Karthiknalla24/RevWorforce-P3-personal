@@ -11,7 +11,7 @@ public interface EmployeeClient {
     Object getAllDepartments();
     
     @GetMapping("/api/departments/{id}")
-    Object getDepartmentById(@PathVariable Long id);
+    Object getDepartmentById(@PathVariable("id") Long id);
     
     @GetMapping("/api/designations")
     Object getAllDesignations();

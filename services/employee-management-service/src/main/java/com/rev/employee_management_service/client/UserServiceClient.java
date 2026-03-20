@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface UserServiceClient {
 
     @GetMapping("/api/users/department/{departmentId}/count")
-    Long countUsersByDepartment(@PathVariable Long departmentId);
+    Long countUsersByDepartment(@PathVariable("departmentId") Long departmentId);
 
     @GetMapping("/api/users/designation/{designationId}/count")
-    Long countUsersByDesignation(@PathVariable Long designationId);
+    Long countUsersByDesignation(@PathVariable("designationId") Long designationId);
 }
